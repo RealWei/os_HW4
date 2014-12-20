@@ -81,6 +81,18 @@ __device__ bool cmp(char const *a, char const *b){
 	}
 	return false;
 }
+__device__ u32* getAddr(int i){
+	return (u32*)volume + BASE + i*30 + 20;
+}
+__device__ char* getName(int i){
+	return (char*)volume + BASE + i*30;
+}
+__device__ u16 getSize(int i){
+	return (u16)*(volume + BASE + i*30 + 28);
+}
+__device__ u32 getTime(int i){
+	return (u32)*(volume + BASE + i*30 + 24);
+}
 __device__ void swapFCB(int a, int b){
 	int i;
 	int indexA = BASE + a*30;
@@ -143,18 +155,7 @@ __device__ void sortByTime(){
 		}
 	}
 }
-__device__ u32* getAddr(int i){
-	return (u32*)volume + BASE + i*30 + 20;
-}
-__device__ char* getName(int i){
-	return (char*)volume + BASE + i*30;
-}
-__device__ u16 getSize(int i){
-	return (u16)*(volume + BASE + i*30 + 28);
-}
-__device__ u32 getTime(int i){
-	return (u32)*(volume + BASE + i*30 + 24);
-}
+
 __device__ u32 findFreeSpace(){
 	int i;
 	for(i = 0; i < 1024; i++){
