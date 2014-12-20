@@ -81,6 +81,68 @@ __device__ bool cmp(char const *a, char const *b){
 	}
 	return false;
 }
+__device__ void swapFCB(int a, int b){
+	int i;
+	int indexA = BASE + a*30;
+	int indexB = BASE + b*30;
+	for(i = 0; i < 26; i++){
+		tempFCB[i] = volume[indexA + i];
+	}
+	for(i = 0; i < 26; i++){
+		volume[indexA + i] = volume[indexB + i];
+	}
+	for(i = 0; i < 26; i++){
+		volume[indexB + i] = tempFCB[i];
+	}
+}
+__device__ void swapContent(int a, int b){
+	int i, j;
+	int indexA = dataHead + (a << 10);
+	int indexB = dataHead + (b << 10);
+	for(i = 0; i < 16; i++){
+		for(j = 0; j < 64; j++){
+			temp[j] = volume[indexA + (i << 6) + j];
+		}
+		for(j = 0; j < 64; j++){
+			volume[indexA + (i << 6) + j] = volume[indexB + (i << 6) + j];
+		}
+		for(j = 0; j < 64; j++){
+			volume[indexB + (i <<6) + j] = temp[j];
+		}
+	}
+}
+__device__ void sortBySize(){
+	int i, j;
+	u16 *fileCount = (u16*)volume + 1024;
+	
+	for(i = 0; i < *fileCount; i++){
+		for(j = 0; j < *fileCount - i -1; j++){
+			if(getSize(j) < getSize(j+1)){
+				swapFCB(j, j+1);
+				swapContent(j, j+1);
+			}
+			else if(getSize(j) == getSize(j+1)){
+				if(getTime(j) > getTime(j+1)){
+					swapFCB(j, j+1);
+					swapContent(j, j+1);
+				}
+			}	
+		}
+	}
+}
+__device__ void sortByTime(){
+	int i, j;
+	u16 *fileCount = (u16*)volume + 1024;
+	
+	for(i = 0; i < *fileCount; i++){
+		for(j = 0; j < *fileCount - i - 1; j++){
+			if(getTime(j) > getTime(j+1)){
+				swapFCB(j, j+1);
+				swapContent(j, j+1);
+			}
+		}
+	}
+}
 __device__ u32* getAddr(int i){
 	return (u32*)volume + BASE + i*30 + 20;
 }
@@ -175,68 +237,7 @@ __device__ void read(uchar *dest, int size, u32 fp) {
 	}
 	*time = *time + 1;
 }
-__device__ void swapFCB(int a, int b){
-	int i;
-	int indexA = BASE + a*30;
-	int indexB = BASE + b*30;
-	for(i = 0; i < 26; i++){
-		tempFCB[i] = volume[indexA + i];
-	}
-	for(i = 0; i < 26; i++){
-		volume[indexA + i] = volume[indexB + i];
-	}
-	for(i = 0; i < 26; i++){
-		volume[indexB + i] = tempFCB[i];
-	}
-}
-__device__ void swapContent(int a, int b){
-	int i, j;
-	int indexA = dataHead + (a << 10);
-	int indexB = dataHead + (b << 10);
-	for(i = 0; i < 16; i++){
-		for(j = 0; j < 64; j++){
-			temp[j] = volume[indexA + (i << 6) + j];
-		}
-		for(j = 0; j < 64; j++){
-			volume[indexA + (i << 6) + j] = volume[indexB + (i << 6) + j];
-		}
-		for(j = 0; j < 64; j++){
-			volume[indexB + (i <<6) + j] = temp[j];
-		}
-	}
-}
-__device__ void sortBySize(){
-	int i, j;
-	u16 *fileCount = (u16*)volume + 1024;
-	
-	for(i = 0; i < *fileCount; i++){
-		for(j = 0; j < *fileCount - i -1; j++){
-			if(getSize(j) < getSize(j+1)){
-				swapFCB(j, j+1);
-				swapContent(j, j+1);
-			}
-			else if(getSize(j) == getSize(j+1)){
-				if(getTime(j) > getTime(j+1)){
-					swapFCB(j, j+1);
-					swapContent(j, j+1);
-				}
-			}	
-		}
-	}
-}
-__device__ void sortByTime(){
-	int i, j;
-	u16 *fileCount = (u16*)volume + 1024;
-	
-	for(i = 0; i < *fileCount; i++){
-		for(j = 0; j < *fileCount - i - 1; j++){
-			if(getTime(j) > getTime(j+1)){
-				swapFCB(j, j+1);
-				swapContent(j, j+1);
-			}
-		}
-	}
-}
+
 __device__ void printFCB_D(){
 	u16 *fileCount = (u16*)(volume + 1024);
 	int i;
